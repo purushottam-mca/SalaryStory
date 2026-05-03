@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <meta name="theme-color" content="#007aff">
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+    <script src="./script.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SalaryStory</title>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-row">
+                <h1>💰 SalaryStory</h1>
+                <div class="header-controls">
+                    <select class="dropdown" id="yearSelect" onchange="changeYear(this.value)"></select>
+                    <select class="dropdown" id="monthSelect" onchange="changeMonth(this.value)"></select>
+                    <button class="icon-btn-top" onclick="openSettings()" title="Settings">⚙️</button>
+                    <button class="icon-btn-top" id="themeToggle" onclick="toggleTheme()"
+                        title="Toggle Theme">🌙</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" id="mainContainer">
+        <!-- Dynamic sections will be rendered here -->
+    </div>
+
+    <div class="container">
+        <button class="add-section-btn" onclick="openSectionModal()">+ Add New Section</button>
+
+        <div class="summary-box">
+            <div class="section-title">Total Summary</div>
+            <div id="breakdownContainer"></div>
+            <div class="item">
+                <span class="item-left"><span class="emoji">💵</span><span class="item-name">Salary Income</span></span>
+                <span class="item-right">
+                    <input type="number" class="amount-input" id="salaryIncome" onchange="saveData()" placeholder="0">
+                </span>
+            </div>
+            <div class="item">
+                <span class="item-left"><span class="emoji">💯</span><span class="item-name">FINAL TOTAL</span></span>
+                <span class="item-right">
+                    <span class="amount-display" id="finalTotal">0</span>
+                </span>
+            </div>
+            <div class="total-row" style="border-top-color:rgba(255,255,255,0.3)">
+                <span>LeftOver</span>
+                <span id="leftOver" class="leftover-negative">0</span>
+            </div>
+        </div>
+
+        <div class="card" style="text-align:center;">
+            <div class="note">Data stored locally in your browser.</div>
+        </div>
+
+        <div class="action-bar">
+            <button class="action-btn" onclick="exportData()">📤 Export JSON</button>
+            <button class="action-btn" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
+            <input type="file" id="importFile" class="hidden-file" accept=".json" onchange="importData(this)">
+        </div>
+    </div>
+
+    <!-- Section / Item Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-title" id="modalTitle">Edit</div>
+            <div id="modalFields"></div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="saveModal()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-title">⚙️ Settings</div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Use Local Storage</div>
+                    <div class="toggle-desc">Save data in browser (auto-save)</div>
+                </div>
+                <div class="toggle-switch active" id="toggleStorage" onclick="toggleSetting('storage')"></div>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Auto Export JSON</div>
+                    <div class="toggle-desc">Export backup on every save</div>
+                </div>
+                <div class="toggle-switch" id="toggleAutoExport" onclick="toggleSetting('autoExport')"></div>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Confirm Delete</div>
+                    <div class="toggle-desc">Show confirmation before deleting</div>
+                </div>
+                <div class="toggle-switch active" id="toggleConfirm" onclick="toggleSetting('confirm')"></div>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Reset All Data</div>
+                    <div class="toggle-desc">Clear everything and start fresh</div>
+                </div>
+                <button class="modal-btn modal-btn-secondary" style="flex:0;padding:8px 16px;font-size:14px;"
+                    onclick="resetAllData()">Reset</button>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="modal-btn modal-btn-primary" onclick="closeSettings()">Done</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
