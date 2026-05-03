@@ -1,6 +1,7 @@
 {
   "name": "SalaryStory",
   "short_name": "SalaryStory",
+  "version": "1.0.0",
   "description": "SalaryStory is a personal salary tracker that stores data locally in your browser.",
   "start_url": "./index.html",
   "scope": "./",

@@ -33,11 +33,18 @@
     </div>
 
     <div class="container">
+        <div id="excludedFootnote" class="excluded-note" style="display:none;">
+            Sections marked with <span class="excluded-star">*</span> are excluded and will not be part of Total calculation.
+        </div>
+    </div>
+
+    <div class="container">
         <button class="add-section-btn" onclick="openSectionModal()">+ Add New Section</button>
 
         <div class="summary-box">
             <div class="section-title">Total Summary</div>
             <div id="breakdownContainer"></div>
+            <div id="summaryDivider" class="summary-divider"></div>
             <div class="item">
                 <span class="item-left"><span class="emoji">💵</span><span class="item-name">Salary Income</span></span>
                 <span class="item-right">
@@ -51,7 +58,7 @@
                 </span>
             </div>
             <div class="total-row" style="border-top-color:rgba(255,255,255,0.3)">
-                <span>LeftOver</span>
+                <span class="item-name">LeftOver</span>
                 <span id="leftOver" class="leftover-negative">0</span>
             </div>
         </div>
@@ -83,6 +90,35 @@
     <div class="modal-overlay" id="settingsModal">
         <div class="modal">
             <div class="modal-title">⚙️ Settings</div>
+
+            <div class="modal-field" style="margin-top:6px;">
+                <label class="modal-label">Currency</label>
+                <select class="modal-input" id="currencySelect" style="cursor:pointer;" onchange="changeCurrency(this.value)">
+                    <option value="INR">INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="JPY">JPY (¥)</option>
+                </select>
+            </div>
+
+            <div class="modal-field">
+                <label class="modal-label">Excluded section (*)</label>
+                <div class="toggle-desc" style="margin-top:4px;">Excluded sections are starred and won't contribute to Final Total, even if items are checked.</div>
+                <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <select class="modal-input" id="excludedSectionSelect" style="cursor:pointer; flex:1;" onchange="onExcludedSectionSelectChange(this.value)"></select>
+                    <div class="toggle-switch" id="toggleExcludedSelected" onclick="toggleExcludedSelected()" title="Exclude selected section"></div>
+                </div>
+            </div>
+
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Show breakdown in Total Summary</div>
+                    <div class="toggle-desc">Show per-section totals above Salary Income</div>
+                </div>
+                <div class="toggle-switch" id="toggleShowBreakdown" onclick="toggleSetting('showBreakdown')"></div>
+            </div>
+
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label">Use Local Storage</div>

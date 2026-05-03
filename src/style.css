@@ -384,6 +384,14 @@ h1 {
     border-bottom-color: rgba(255, 255, 255, 0.2);
 }
 
+.summary-box .item-name {
+    color: white;
+}
+
+.summary-box .amount-display {
+    color: white;
+}
+
 .summary-box .amount-input {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.3);
@@ -392,6 +400,24 @@ h1 {
 
 .summary-box .amount-input::placeholder {
     color: rgba(255, 255, 255, 0.6);
+}
+
+.summary-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 12px 0;
+    display: none;
+}
+
+.excluded-star {
+    color: var(--red);
+    font-weight: 800;
+}
+
+.excluded-note {
+    margin-top: 10px;
+    color: var(--text-secondary);
+    font-size: 13px;
 }
 
 .leftover-positive {

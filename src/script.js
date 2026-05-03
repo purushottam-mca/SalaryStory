@@ -7,6 +7,20 @@ let data = {};
 let settings = {};
 let modalState = { type: null, secIdx: null, itemIdx: null };
 
+function formatMoney(amount) {
+    const currency = settings.currency || 'INR';
+    const value = typeof amount === 'number' ? amount : (parseFloat(amount) || 0);
+    try {
+        return new Intl.NumberFormat(undefined, {
+            style: 'currency',
+            currency,
+            maximumFractionDigits: 0
+        }).format(value);
+    } catch {
+        return Math.round(value).toLocaleString();
+    }
+}
+
 // ADD YOUR DEFAULT SECTIONS HERE
 const defaultSections = [
     {
@@ -16,6 +30,7 @@ const defaultSections = [
         color: '#007aff',
         totalPeriod: 'month',
         collapsed: false,
+        excluded: false,
         items: [
             { emoji: '🛒', name: 'Shopping Membership', amount: 1499, period: 'year', included: false },
             { emoji: '📺', name: 'OTT Subscription', amount: 999, period: 'year', included: false },
@@ -32,6 +47,7 @@ const defaultSections = [
         color: '#34c759',
         totalPeriod: 'month',
         collapsed: false,
+        excluded: false,
         items: [
             { emoji: '👨‍👩‍👧‍👦', name: 'Family Support', amount: 15000, period: 'month', included: false },
             { emoji: '💊', name: 'Medical Expenses', amount: 2000, period: 'month', included: false },
@@ -46,6 +62,7 @@ const defaultSections = [
         color: '#ff9500',
         totalPeriod: 'month',
         collapsed: false,
+        excluded: false,
         items: [
             { emoji: '🏠', name: 'Rent / EMI', amount: 15000, period: 'month', included: false },
             { emoji: '💡', name: 'Electricity Bill', amount: 1500, period: 'month', included: false },
@@ -60,6 +77,7 @@ const defaultSections = [
         color: '#ff3b30',
         totalPeriod: 'month',
         collapsed: false,
+        excluded: false,
         items: [
             { emoji: '🛒', name: 'Groceries', amount: 4000, period: 'month', included: false },
             { emoji: '🍔', name: 'Food Delivery', amount: 1500, period: 'month', included: false },
@@ -76,6 +94,7 @@ const defaultSections = [
         color: '#af52de',
         totalPeriod: 'month',
         collapsed: false,
+        excluded: false,
         items: [
             { emoji: '🏦', name: 'PPF / Savings', amount: 5000, period: 'month', included: false },
             { emoji: '📊', name: 'Mutual Funds (SIP)', amount: 8000, period: 'month', included: false },
@@ -90,6 +109,7 @@ const defaultSections = [
         color: '#5856d6',
         totalPeriod: 'month',
         collapsed: false,
+        excluded: false,
         items: [
             { emoji: '🏦', name: 'Provident Fund', amount: 12000, period: 'month', included: false },
             { emoji: '📊', name: 'NPS Contribution', amount: 5000, period: 'month', included: false },
@@ -109,8 +129,10 @@ function init() {
     if (storedSettings) {
         settings = JSON.parse(storedSettings);
     } else {
-        settings = { storage: true, autoExport: false, confirm: true };
+        settings = { storage: true, autoExport: false, confirm: true, currency: 'INR', showBreakdown: false };
     }
+    if (!settings.currency) settings.currency = 'INR';
+    if (typeof settings.showBreakdown !== 'boolean') settings.showBreakdown = false;
     ensureYearData(currentYear);
     loadTheme();
     renderYearSelector();
@@ -325,6 +347,11 @@ function openSettings() {
     document.getElementById('toggleStorage').classList.toggle('active', settings.storage);
     document.getElementById('toggleAutoExport').classList.toggle('active', settings.autoExport);
     document.getElementById('toggleConfirm').classList.toggle('active', settings.confirm);
+    const breakdownToggle = document.getElementById('toggleShowBreakdown');
+    if (breakdownToggle) breakdownToggle.classList.toggle('active', !!settings.showBreakdown);
+    const currencySel = document.getElementById('currencySelect');
+    if (currencySel) currencySel.value = settings.currency || 'INR';
+    renderExcludedSectionPicker();
     document.getElementById('settingsModal').classList.add('active');
 }
 
@@ -336,6 +363,46 @@ function toggleSetting(key) {
     settings[key] = !settings[key];
     document.getElementById('toggle' + key.charAt(0).toUpperCase() + key.slice(1)).classList.toggle('active', settings[key]);
     localStorage.setItem('financeSettings', JSON.stringify(settings));
+}
+
+function changeCurrency(currency) {
+    settings.currency = currency;
+    localStorage.setItem('financeSettings', JSON.stringify(settings));
+    renderAll();
+}
+
+function renderExcludedSectionPicker(selectedIdx) {
+    const sel = document.getElementById('excludedSectionSelect');
+    const toggle = document.getElementById('toggleExcludedSelected');
+    if (!sel || !toggle) return;
+
+    const monthData = getMonthData();
+    const idx = (selectedIdx !== undefined && selectedIdx !== null)
+        ? parseInt(selectedIdx)
+        : (sel.value ? parseInt(sel.value) : 0);
+
+    sel.innerHTML = monthData.sections.map((s, i) => {
+        const star = s.excluded ? ' *' : '';
+        return `<option value="${i}" ${i === idx ? 'selected' : ''}>${s.emoji} ${s.title}${star}</option>`;
+    }).join('');
+
+    const current = monthData.sections[parseInt(sel.value) || 0];
+    toggle.classList.toggle('active', !!current?.excluded);
+}
+
+function onExcludedSectionSelectChange(value) {
+    renderExcludedSectionPicker(parseInt(value));
+}
+
+function toggleExcludedSelected() {
+    const sel = document.getElementById('excludedSectionSelect');
+    if (!sel) return;
+    const idx = parseInt(sel.value);
+    const section = getMonthData().sections[idx];
+    section.excluded = !section.excluded;
+    saveData();
+    renderExcludedSectionPicker(idx);
+    renderAll();
 }
 
 function resetAllData() {
@@ -355,6 +422,10 @@ function renderAll() {
     const monthData = getMonthData();
     container.innerHTML = '';
 
+    const excludedFootnote = document.getElementById('excludedFootnote');
+    const hasExcluded = monthData.sections.some(s => !!s.excluded);
+    if (excludedFootnote) excludedFootnote.style.display = hasExcluded ? '' : 'none';
+
     monthData.sections.forEach((section, secIdx) => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -363,9 +434,10 @@ function renderAll() {
             <div class="section-header" onclick="toggleCollapse(${secIdx})" ondblclick="toggleCollapse(${secIdx})">
                 <div style="display:flex;align-items:center;flex:1;">
                     <span class="collapse-icon ${isCollapsed ? 'collapsed' : ''}" id="collapse-icon-${secIdx}">▼</span>
-                    <div class="section-title" style="border-left-color:${section.color}">${section.emoji} ${section.title}</div>
+                    <div class="section-title" style="border-left-color:${section.color}">${section.emoji} ${section.title}${section.excluded ? ' <span class="excluded-star">*</span>' : ''}</div>
                 </div>
                 <div class="section-actions" onclick="event.stopPropagation()">
+                    <button class="icon-btn" onclick="openItemModal(${secIdx})" title="Add Item">➕</button>
                     <button class="icon-btn" onclick="openSectionModal(${secIdx})" title="Edit">✏️</button>
                     <button class="icon-btn" onclick="deleteSection(${secIdx})" title="Delete">🗑️</button>
                 </div>
@@ -375,10 +447,9 @@ function renderAll() {
                 <div class="total-row">
                     <span class="total-amount" id="total-${secIdx}">0</span>
                     <select class="total-period" onchange="updateTotalPeriod(${secIdx},this.value)">
-                        ${periods.map(p => `<option value="${p}" ${p === section.totalPeriod ? 'selected' : ''}>/${p}</option>`).join('')}
+                        ${periods.map(p => `<option value="${p}" ${p === section.totalPeriod ? 'selected' : ''}>${p}</option>`).join('')}
                     </select>
                 </div>
-                <button class="add-btn" onclick="openItemModal(${secIdx})">+ Add Item</button>
             </div>
         `;
         container.appendChild(card);
@@ -387,7 +458,17 @@ function renderAll() {
 
     document.getElementById('salaryIncome').value = monthData.salaryIncome;
     calculateSummary();
-    renderBreakdown();
+    const breakdown = document.getElementById('breakdownContainer');
+    const divider = document.getElementById('summaryDivider');
+    if (settings.showBreakdown) {
+        renderBreakdown();
+        if (breakdown) breakdown.style.display = '';
+        if (divider) divider.style.display = 'block';
+    } else {
+        if (breakdown) breakdown.innerHTML = '';
+        if (breakdown) breakdown.style.display = 'none';
+        if (divider) divider.style.display = 'none';
+    }
 }
 
 function renderBreakdown() {
@@ -396,6 +477,7 @@ function renderBreakdown() {
     let html = '';
 
     monthData.sections.forEach(section => {
+        if (section.excluded) return;
         let sectionTotal = 0;
         section.items.forEach(item => {
             if (item.included) {
@@ -406,7 +488,7 @@ function renderBreakdown() {
             html += `
                 <div class="breakdown-item">
                     <span class="breakdown-name"><span class="emoji">${section.emoji}</span> ${section.title}</span>
-                    <span class="breakdown-amount">₹${Math.round(sectionTotal).toLocaleString('en-IN')}/m</span>
+                    <span class="breakdown-amount">${formatMoney(Math.round(sectionTotal))} per month</span>
                 </div>
             `;
         }
@@ -477,7 +559,7 @@ function updateSectionTotal(secIdx) {
         default: displayTotal = monthlyTotal;
     }
 
-    document.getElementById(`total-${secIdx}`).innerText = '₹' + Math.round(displayTotal).toLocaleString('en-IN');
+    document.getElementById(`total-${secIdx}`).innerText = formatMoney(Math.round(displayTotal));
 }
 
 function updateTotalPeriod(secIdx, period) {
@@ -543,6 +625,7 @@ function calculateSummary() {
     let finalTotal = 0;
 
     monthData.sections.forEach(section => {
+        if (section.excluded) return;
         section.items.forEach(item => {
             if (item.included) {
                 finalTotal += toMonthly(item.amount, item.period);
@@ -550,12 +633,12 @@ function calculateSummary() {
         });
     });
 
-    document.getElementById('finalTotal').innerText = '₹' + Math.round(finalTotal).toLocaleString('en-IN');
+    document.getElementById('finalTotal').innerText = formatMoney(Math.round(finalTotal));
 
     let salary = parseFloat(document.getElementById('salaryIncome').value) || 0;
     let leftover = salary - finalTotal;
     const loEl = document.getElementById('leftOver');
-    loEl.innerText = (leftover >= 0 ? '+' : '') + '₹' + Math.round(leftover).toLocaleString('en-IN');
+    loEl.innerText = (leftover >= 0 ? '+' : '-') + formatMoney(Math.round(Math.abs(leftover)));
     loEl.className = leftover >= 0 ? 'leftover-positive' : 'leftover-negative';
 }
 
