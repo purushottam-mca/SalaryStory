@@ -119,13 +119,16 @@
                 <div class="toggle-switch" id="toggleShowBreakdown" onclick="toggleSetting('showBreakdown')"></div>
             </div>
 
-            <div class="toggle-row">
-                <div>
-                    <div class="toggle-label">Use Local Storage</div>
-                    <div class="toggle-desc">Save data in browser (auto-save)</div>
+            <div class="modal-field" style="margin-top:10px;">
+                <label class="modal-label">Font size</label>
+                <div class="toggle-desc" style="margin-top:4px;">Adjust section and item font size (75% to 125%)</div>
+                <div class="range-row">
+                    <input type="range" id="fontScaleRange" min="75" max="125" step="1" value="100"
+                        oninput="onFontScaleInput(this.value)" onchange="onFontScaleChange(this.value)">
+                    <span class="range-value" id="fontScaleValue">95%</span>
                 </div>
-                <div class="toggle-switch active" id="toggleStorage" onclick="toggleSetting('storage')"></div>
             </div>
+
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label">Auto Export JSON</div>

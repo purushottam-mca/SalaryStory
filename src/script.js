@@ -129,15 +129,23 @@ function init() {
     if (storedSettings) {
         settings = JSON.parse(storedSettings);
     } else {
-        settings = { storage: true, autoExport: false, confirm: true, currency: 'INR', showBreakdown: false };
+        settings = { storage: true, autoExport: false, confirm: true, currency: 'INR', showBreakdown: false, fontScale: 0.95 };
     }
     if (!settings.currency) settings.currency = 'INR';
     if (typeof settings.showBreakdown !== 'boolean') settings.showBreakdown = false;
+    if (typeof settings.fontScale !== 'number' || !isFinite(settings.fontScale)) settings.fontScale = 0.95;
+    settings.fontScale = Math.min(1.25, Math.max(0.75, settings.fontScale));
     ensureYearData(currentYear);
     loadTheme();
+    applyFontScale();
     renderYearSelector();
     renderMonthSelector();
     renderAll();
+}
+
+function applyFontScale() {
+    const scale = (typeof settings.fontScale === 'number' && isFinite(settings.fontScale)) ? settings.fontScale : 0.95;
+    document.documentElement.style.setProperty('--font-scale', String(scale));
 }
 
 // ===== PWA (Service Worker) =====
@@ -344,13 +352,21 @@ function openItemModal(secIdx, itemIdx) {
 
 // ===== SETTINGS =====
 function openSettings() {
-    document.getElementById('toggleStorage').classList.toggle('active', settings.storage);
+    const storageToggle = document.getElementById('toggleStorage');
+    if (storageToggle) storageToggle.classList.toggle('active', settings.storage);
     document.getElementById('toggleAutoExport').classList.toggle('active', settings.autoExport);
     document.getElementById('toggleConfirm').classList.toggle('active', settings.confirm);
     const breakdownToggle = document.getElementById('toggleShowBreakdown');
     if (breakdownToggle) breakdownToggle.classList.toggle('active', !!settings.showBreakdown);
     const currencySel = document.getElementById('currencySelect');
     if (currencySel) currencySel.value = settings.currency || 'INR';
+    const range = document.getElementById('fontScaleRange');
+    const value = document.getElementById('fontScaleValue');
+    if (range && value) {
+        const pct = Math.round((settings.fontScale || 1) * 100);
+        range.value = String(pct);
+        value.textContent = `${pct}%`;
+    }
     renderExcludedSectionPicker();
     document.getElementById('settingsModal').classList.add('active');
 }
@@ -361,7 +377,8 @@ function closeSettings() {
 
 function toggleSetting(key) {
     settings[key] = !settings[key];
-    document.getElementById('toggle' + key.charAt(0).toUpperCase() + key.slice(1)).classList.toggle('active', settings[key]);
+    const el = document.getElementById('toggle' + key.charAt(0).toUpperCase() + key.slice(1));
+    if (el) el.classList.toggle('active', settings[key]);
     localStorage.setItem('financeSettings', JSON.stringify(settings));
 }
 
@@ -369,6 +386,19 @@ function changeCurrency(currency) {
     settings.currency = currency;
     localStorage.setItem('financeSettings', JSON.stringify(settings));
     renderAll();
+}
+
+function onFontScaleInput(pct) {
+    const value = document.getElementById('fontScaleValue');
+    if (value) value.textContent = `${pct}%`;
+    const scale = Math.min(1.25, Math.max(0.75, (parseInt(pct) || 100) / 100));
+    settings.fontScale = scale;
+    applyFontScale();
+}
+
+function onFontScaleChange(pct) {
+    onFontScaleInput(pct);
+    localStorage.setItem('financeSettings', JSON.stringify(settings));
 }
 
 function renderExcludedSectionPicker(selectedIdx) {
