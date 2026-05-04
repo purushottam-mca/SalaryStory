@@ -47,7 +47,7 @@ body {
     background: var(--bg);
     color: var(--text);
     line-height: 1.5;
-    padding-bottom: 40px;
+    padding-bottom: 10px;
     transition: background 0.3s, color 0.3s;
 }
 
@@ -55,6 +55,13 @@ body {
     max-width: 600px;
     margin: 0 auto;
     padding: 16px;
+}
+
+#bottomContainer {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px;
+    padding-top: 0px;
 }
 
 header {
@@ -140,6 +147,17 @@ h1 {
     border-radius: 16px;
     padding: 0;
     margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: background 0.3s, color 0.3s;
+    overflow: hidden;
+}
+
+#excludedFootnote {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 0;
+    margin-top: 16px;
+    margin-bottom: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     transition: background 0.3s, color 0.3s;
     overflow: hidden;
@@ -343,7 +361,6 @@ h1 {
     gap: 8px;
     padding: 12px 8px;
     margin-top: 8px;
-    border-top: 2px solid var(--border);
     font-weight: 700;
     font-size: calc(16px * var(--font-scale));
     color: var(--text);
@@ -373,7 +390,8 @@ h1 {
     color: white;
     border-radius: 16px;
     padding: 20px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
+    margin-top:25px;
 }
 
 .summary-box .section-title {
@@ -413,12 +431,6 @@ h1 {
 .excluded-star {
     color: var(--red);
     font-weight: 800;
-}
-
-.excluded-note {
-    margin-top: 10px;
-    color: var(--text-secondary);
-    font-size: calc(13px * var(--font-scale));
 }
 
 .leftover-positive {
@@ -473,12 +485,17 @@ h1 {
     font-style: italic;
     transition: color 0.3s;
 }
-
 .action-bar {
     display: flex;
-    justify-content: center;
+    justify-content: space-between; /* left + right */
+    align-items: center;
+    padding: 8px 0px; /* slightly reduced side gap */
+}
+
+.action-bar-left {
+    display: flex;
     gap: 12px;
-    padding: 16px;
+    align-items: center; /* fixed (was invalid 'left') */
 }
 
 .action-btn {
@@ -498,6 +515,39 @@ h1 {
 
 .action-btn:hover {
     background: var(--bg);
+}
+
+.github-btn {
+    width: 40px;
+    height: 36px;
+
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    color: var(--text);
+    text-decoration: none;
+
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.github-btn:hover {
+    background: var(--bg);
+    transform: scale(1.05);
+}
+
+.github-btn:active {
+    transform: scale(0.95);
+}
+
+.github-btn.hidden {
+    display: none;
 }
 
 /* Modal Styles */
@@ -737,6 +787,11 @@ h1 {
 @media (max-width: 480px) {
     .container {
         padding: 10px;
+    }
+
+    #bottomContainer {
+        padding: 10px;
+        padding-top: 0px;
     }
 
     h1 {

@@ -129,7 +129,7 @@ function init() {
     if (storedSettings) {
         settings = JSON.parse(storedSettings);
     } else {
-        settings = { storage: true, autoExport: false, confirm: true, currency: 'INR', showBreakdown: false, fontScale: 0.95 };
+        settings = { storage: true, autoExport: false, currency: 'INR', showBreakdown: false, fontScale: 0.95, showGithubBtn: true };
     }
     if (!settings.currency) settings.currency = 'INR';
     if (typeof settings.showBreakdown !== 'boolean') settings.showBreakdown = false;
@@ -271,6 +271,17 @@ function openModal(type, secIdx, itemIdx) {
                 </select>
             </div>
         `;
+    } else if (type === 'export') {
+        title.textContent = 'Select Year to Export';
+        const availableYears = Object.keys(data).filter(y => data[y] && Object.keys(data[y]).length > 0);
+        fields.innerHTML = `
+            <div class="modal-field">
+                <label class="modal-label">Year</label>
+                <select class="modal-input" id="exportYear">
+                    ${availableYears.map(y => `<option value="${y}">${y}</option>`).join('')}
+                </select>
+            </div>
+        `;
     }
     modal.classList.add('active');
 }
@@ -335,6 +346,21 @@ function saveModal() {
                 emoji: emoji || '📌', name, amount, period, included: false
             });
         }
+    } else if (type === 'export') {
+        const year = document.getElementById('exportYear').value;
+        if (!year) return;
+        const yearData = data[year];
+        if (!yearData) {
+            alert("No data for year " + year);
+            return;
+        }
+        const blob = new Blob([JSON.stringify({ [year]: yearData }, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `finance_backup_${year}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     saveData();
@@ -355,7 +381,9 @@ function openSettings() {
     const storageToggle = document.getElementById('toggleStorage');
     if (storageToggle) storageToggle.classList.toggle('active', settings.storage);
     document.getElementById('toggleAutoExport').classList.toggle('active', settings.autoExport);
-    document.getElementById('toggleConfirm').classList.toggle('active', settings.confirm);
+    document.getElementById('toggleShowGithubBtn').classList.toggle('active', settings.showGithubBtn);
+    const githubBtn = document.querySelector('.github-btn');
+    if (githubBtn) githubBtn.classList.toggle('hidden', settings.showGithubBtn);
     const breakdownToggle = document.getElementById('toggleShowBreakdown');
     if (breakdownToggle) breakdownToggle.classList.toggle('active', !!settings.showBreakdown);
     const currencySel = document.getElementById('currencySelect');
@@ -636,7 +664,7 @@ function updatePeriod(secIdx, idx, value) {
 }
 
 function deleteItem(secIdx, idx) {
-    if (settings.confirm && !confirm('Delete this item?')) return;
+    if (!confirm('Delete this item?')) return;
     getMonthData().sections[secIdx].items.splice(idx, 1);
     saveData();
     renderSectionItems(secIdx);
@@ -644,7 +672,7 @@ function deleteItem(secIdx, idx) {
 }
 
 function deleteSection(secIdx) {
-    if (settings.confirm && !confirm('Delete this entire section?')) return;
+    if (!confirm('Delete this entire section?')) return;
     getMonthData().sections.splice(secIdx, 1);
     saveData();
     renderAll();
@@ -683,7 +711,14 @@ function saveData() {
 }
 
 function exportData() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const year = prompt("Enter the year to export:", currentYear);
+    if (!year || isNaN(year)) return;
+    const yearData = data[year];
+    if (!yearData) {
+        alert("No data for year " + year);
+        return;
+    }
+    const blob = new Blob([JSON.stringify({ [year]: yearData }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -697,16 +732,29 @@ function importData(input) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = e => {
+        let importedData;
         try {
-            data = JSON.parse(e.target.result);
-            saveData();
-            renderYearSelector();
-            renderMonthSelector();
-            renderAll();
-            alert('Data imported successfully!');
+            importedData = JSON.parse(e.target.result);
         } catch (err) {
-            alert('Invalid JSON file');
+            alert('Invalid JSON file: ' + err.message);
+            return;
         }
+        const years = Object.keys(importedData);
+        if (years.length === 0) {
+            alert('JSON file contains no data.');
+            return;
+        }
+        alert(`This JSON has data for year(s): ${years.join(', ')}`);
+        // Merge: update if match, insert if new, keep if not in import
+        for (const [year, yearData] of Object.entries(importedData)) {
+            if (!data[year]) data[year] = {};
+            Object.assign(data[year], yearData);
+        }
+        saveData();
+        renderYearSelector();
+        renderMonthSelector();
+        renderAll();
+        alert('Data imported successfully!');
     };
     reader.readAsText(file);
     input.value = '';
