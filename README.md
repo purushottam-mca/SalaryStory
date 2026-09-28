@@ -1,7 +1,7 @@
 ## SalaryStory (Personal Finance Tracker)
 <img width="602" height="1138" alt="image" src="https://github.com/user-attachments/assets/acd315e0-1da5-4cc6-a25a-3919769f2036" />
 
-Mobile + desktop friendly personal finance tracker built with vanilla HTML/CSS/JS. Works offline-ish as a simple PWA-style single page and stores data locally in your browser.
+Mobile friendly personal finance tracker built with vanilla HTML/CSS/JS. Works offline-ish as a simple PWA-style single page and stores data locally in your browser.
 
 ## Run
 
